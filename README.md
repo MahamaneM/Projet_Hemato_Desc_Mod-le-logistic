@@ -1,2 +1,2 @@
-# Projet_Hemato_Desc_Mod-le-logistic
+# Projet_Hemato_Desc_Modèle-logistic
 Analyse de données
