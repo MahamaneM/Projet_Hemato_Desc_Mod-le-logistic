@@ -1,0 +1,403 @@
+---
+title: "Analyse descriptives_Modèle logistique"
+author: "Dr MAIGA Mahamane"
+format: html
+editor: visual
+---
+
+#Chargement des packages nécessaires
+
+```{r}
+#| echo: false
+library(questionr)
+library(tidyverse)
+library(gtsummary)
+```
+
+#Importation de la base de données
+
+```{r}
+library(readxl)
+BD_K <- read_excel("Donnees.xlsx")
+
+```
+
+#Exploration de la base de données
+
+```{r}
+summary(BD_K)
+glimpse(BD_K)
+```
+
+Il y' a un probleme,du fait que l'nsemble des variables quantitatives sont codées e characteres.Il faut donc les transformer en variables numéiques.
+
+```{r}
+freq.na(BD_K)
+```
+
+La vairable Age (jour) contient 1% de données manquante
+
+#Transformation des variables
+
+```{r}
+BD_K$`Hb g/dl`<-as.numeric(BD_K$`Hb g/dl`)
+BD_K$`Ht %` <- as.numeric(BD_K$`Ht %`)
+BD_K$`VGM fl` <- as.numeric(BD_K$`VGM fl`)
+BD_K$`GB/mm3` <- as.numeric(BD_K$`GB/mm3`)
+BD_K$`GR/mm3` <- as.numeric(BD_K$`GR/mm3`)
+BD_K$`PQTTES/mm3` <- as.numeric(BD_K$`PQTTES/mm3`)
+BD_K$`PNN %` <- as.numeric(BD_K$`PNN %`)
+BD_K$`PNE %` <- as.numeric(BD_K$`PNE %`)
+BD_K$`PNB %` <- as.numeric(BD_K$`PNB %`)
+BD_K$`Mono %` <- as.numeric(BD_K$`Mono %`)
+BD_K$`Lympho %` <- as.numeric(BD_K$`Lympho %`)
+BD_K$`D P/ tpf` <- as.integer(BD_K$`D P/ tpf`)
+
+```
+
+```{r}
+summary(BD_K)
+freq.na(BD_K)
+```
+
+##transformer les variables characteres en factor
+
+```{r}
+BD_K <- BD_K %>% 
+  mutate(
+    sexe=factor(sexe),
+    Goutte_E=factor(`Goutte épaisse/ μl`),
+    CRP=factor(`CRP/ mg`),
+    Résidence=factor(Résidence),
+    Motif_C=factor(`Motifs de consulation`)
+  )
+```
+
+```{r}
+glimpse(BD_K)
+```
+
+#Analyses descriptives
+
+```{r}
+theme_gtsummary_language("fr",decimal.mark = ",",big.mark = " ")
+```
+
+##Répartition selon les tranches d’âge découpage de la variable age en classe d'âge
+
+```{r}
+## Recodage de BD_K$`Age (jour)` en BD_K$Age_classe
+BD_K$Age_classe <- cut(BD_K$`Age (jour)`,
+  include.lowest = TRUE,
+  right = FALSE,
+  dig.lab = 4,
+  breaks = c(1, 500, 1000, 2000, 5110)
+)
+```
+
+```{r}
+BD_K %>% 
+  select(Age_classe) %>% 
+  tbl_summary(missing= "no")
+```
+
+##Répartition selon le sexe
+
+```{r}
+BD_K %>% 
+  select(sexe) %>% 
+  tbl_summary(missing= "no")
+```
+
+##Répartition selon la résidence
+
+```{r}
+## Recodage de BD_K$Résidence en BD_K$Résidence_rec
+BD_K$Résidence_rec <- BD_K$Résidence %>%
+  fct_recode(
+    "Ouelessebougou" = "Ouélessébougou",
+    "Ouelessebougou" = "Ouélessébouou"
+  )
+```
+
+```{r}
+BD_K %>% 
+  select(Résidence_rec) %>% 
+  tbl_summary(missing= NULL)
+```
+
+##Répartition selon les motifs de consultation
+
+```{r}
+## Recodage de BD_K$`Motifs de consulation` en BD_K$`Motifs de consulation_rec`
+BD_K$`Motifs_C_rec` <- BD_K$`Motifs de consulation` %>%
+  fct_recode(
+    "Amaigrissement" = "Amaigrissement+diarrhée",
+    "Convulsion" = "Convulsion+refux de teter",
+    "Coma" = "Fievre +paleur+convulsion+coma",
+    "Fievre" = "Fievre+anorexie",
+    "Fievre" = "Fievre+ballonement",
+    "Fievre" = "Fievre+ballonnement",
+    "Fievre" = "Fievre+constipation",
+    "Convulsion" = "Fievre+convulsion",
+    "Convulsion" = "Fievre+convulsion+diarrhée",
+    "Convulsion" = "Fievre+convulsion+vomissement",
+    "Fievre" = "Fievre+diarrhée",
+    "Ictere" = "Fievre+ictere",
+    "Fievre" = "Fievre+paleur",
+    "Fievre" = "Fievre+paleur+amaigrissement",
+    "Coma" = "Fievre+paleur+amaigrissement+coma",
+    "Fievre" = "Fievre+paleur+anorexie",
+    "Fievre" = "Fievre+paleur+Ballonement+toux",
+    "Fievre" = "fievre+paleur+Ballonnement",
+    "Convulsion" = "Fievre+paleur+convulsion",
+    "Coma" = "Fievre+paleur+convulsion+coma",
+    "Convulsion" = "Fievre+paleur+convulsion+diarrhée",
+    "Convulsion" = "Fievre+paleur+convulsion+toux",
+    "Fievre" = "Fievre+paleur+diarrhée",
+    "Fievre" = "Fievre+paleur+toux",
+    "Fievre" = "Fievre+paleur+vomissement",
+    "Coma" = "Fievre+paleur+vomissement+coma",
+    "Convulsion" = "Fievre+paleur+vomissement+convulsion",
+    "Fievre" = "Fievre+paleur+vomissement+diarrhée",
+    "Fievre" = "fievre+refux de teter",
+    "Fievre" = "Fievre+refux de teter",
+    "Souffrance fœtale" = "Fievre+souffrance fœtale",
+    "Fievre" = "Fievre+vomissement",
+    "Fievre" = "Fievre+vomissement+diarrhée",
+    "Oedeme pied" = "oedeme pied +amaigrissement",
+    "Oedeme pied" = "Oedeme pied +amaigrissement",
+    "Paleur" = "paleur+amaigrissement+diarrhée",
+    "Paleur" = "Paleur+amaigrissement+diarrhéé",
+    "Coma" = "Paleur+coma",
+    "Convulsion" = "Paleur+convulsion+diarrhée",
+    "Convulsion" = "Paleur+Convulsion+diarrhée",
+    "Paleur" = "Paleur+diarrhéé",
+    "Paleur" = "paleur+vomissement",
+    "Souffrance fœtale" = "Souffrance fœtale+refux de pleurer",
+    "Toux" = "Toux+vomissement",
+    "vomissement+diarrhée" = "Vomissement+diarrhée"
+  )
+```
+
+```{r}
+BD_K %>% 
+  select(`Motifs_C_rec`) %>% 
+  tbl_summary(missing= "no")
+```
+
+##Moyennes des paramètres de l’hémogramme
+
+```{r}
+BD_K %>% 
+  select("Hb g/dl","VGM fl","Ht %" ) %>% 
+  tbl_summary(missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})"))
+```
+
+##Répartition selon le résultat de la goutte épaisse
+
+```{r}
+## Recodage de BD_K$`Goutte épaisse/ μl`
+BD_K$Goutte_E <- BD_K$Goutte_E %>%
+  fct_recode(
+    "Positive" = "Postive"
+  )
+```
+
+```{r}
+BD_K %>% 
+  select(Goutte_E) %>% 
+  tbl_summary(missing= NULL)
+```
+
+##Répartition selon le résultat de la CRP
+
+```{r}
+BD_K %>% 
+  select(CRP) %>% 
+  tbl_summary(missing= "no")
+```
+
+##Tranches d’âge et moyenne des paramètres de l’hémogramme
+
+```{r}
+BD_K %>% 
+  select("Hb g/dl","VGM fl","Ht %" ,Age_classe) %>% 
+  tbl_summary(missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})"),by=Age_classe)
+```
+
+##Tranches d’âge et goutte épaisse
+
+```{r}
+BD_K %>% 
+  select("Hb g/dl","VGM fl","Ht %" ,Goutte_E) %>% 
+  tbl_summary(missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})"),by=Goutte_E) %>% 
+  add_p( test = everything() ~ "t.test")
+```
+
+##Tranches d’âge et CRP
+
+```{r}
+BD_K %>% 
+  select(Age_classe,CRP) %>% 
+  tbl_summary(missing="no",by=Age_classe) %>% 
+  add_p()
+```
+
+##Résidence et paramètres de l’hémogramme
+
+```{r}
+BD_K %>% 
+  select("Hb g/dl","VGM fl","Ht %" ,Résidence_rec) %>% 
+  tbl_summary(missing= NULL,statistic = list(all_continuous() ~ "{mean} ({sd})"),by=Résidence_rec)%>%
+  add_p( test = everything() ~ "t.test")
+```
+
+##Résidence et CRP
+
+```{r}
+BD_K %>% 
+  select(Résidence_rec,CRP) %>% 
+  tbl_summary(missing= NULL,by=Résidence_rec) %>% 
+  add_p()
+```
+
+##Résidence et goutte épaisse
+
+```{r}
+BD_K %>% 
+  select(Résidence_rec,Goutte_E) %>% 
+  tbl_summary(missing="no",by=Résidence_rec) %>% 
+  add_p()
+```
+
+#Moyenne des parametres de l'hemogramme
+
+```{r}
+BD_K %>% 
+  select("Hb g/dl","VGM fl","Ht %" ,"GR/mm3" ,"GB/mm3" ,"Lympho %",
+         "Mono %" ,"PQTTES/mm3") %>% 
+  tbl_summary(missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})"))
+  
+```
+
+#Moyenne des parametres de l'hemogramme selon la résidence
+
+```{r}
+BD_K %>% 
+  select("Hb g/dl","VGM fl","Ht %" ,"GR/mm3" ,"GB/mm3" ,"Lympho %",
+         "Mono %" ,"PQTTES/mm3",Résidence_rec) %>% 
+  tbl_summary(by=Résidence_rec,missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% 
+  add_p(test = everything() ~ "t.test")
+```
+
+#Moyenne des parametres de l'hemogramme selon les tranches d'age
+
+```{r}
+BD_K %>% 
+  select("Hb g/dl","VGM fl","Ht %" ,"GR/mm3" ,"GB/mm3" ,"Lympho %",
+         "Mono %" ,"PQTTES/mm3",Age_classe) %>% 
+  tbl_summary(by=Age_classe,missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% 
+  add_p(test = everything() ~ "aov")
+```
+
+#Granulocytes
+
+```{r}
+BD_K %>% 
+  select("PNN %","PNE %","PNB %" ) %>% 
+  tbl_summary(missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})"))
+```
+
+#Granulocytes selon la résidence
+
+```{r}
+BD_K %>% 
+  select("PNN %","PNE %","PNB %",Résidence_rec ) %>% 
+  tbl_summary(by=Résidence_rec,missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% 
+  add_p(test = everything() ~ "t.test")
+```
+
+#Granulocytes selon la tranches d'age
+
+```{r}
+BD_K %>% 
+  select("PNN %","PNE %","PNB %",Age_classe) %>% 
+  tbl_summary(by=Age_classe,missing="no",statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% 
+  add_p(test = everything() ~ "aov")
+```
+
+#Graphiques
+
+```{r}
+ggplot(BD_K)+
+  aes(x=Age_classe)+
+  geom_bar(fill="skyblue")+
+  theme_bw()+
+  labs(y="Frequence",x="Classes d'âges en jour",title = "Répartition de l'âge")
+```
+
+```{r}
+ggplot(BD_K)+
+  aes(x=sexe,y=`Age (jour)`,fill = sexe)+
+  geom_boxplot()+
+  theme_bw()+
+  labs(y="Age en jour",x="Sexe",title = "Distribution de l'âge selon le sexe")
+```
+
+```{r}
+ggplot(BD_K)+
+  aes(x=Goutte_E,fill = sexe)+
+  geom_bar(position = "dodge")+
+  theme_bw()+
+  labs(y=" ",x="Goutte épaisse",title = "Résultat de la GE selon le sexe")
+```
+
+```{r}
+ggplot(BD_K)+
+  aes(x=Goutte_E,fill = Résidence_rec)+
+  geom_bar(position = "dodge")+
+  theme_bw()+
+  labs(y=" ",x="Goutte épaisse",title = "Résultat de la GE selon le lieu de résidence")
+```
+
+#Creation d'une nouvelle variable définissant l'anemie
+
+```{r}
+BD_K$Anemie<-ifelse(BD_K$`Hb g/dl`>=11.0,0,1)
+```
+
+```{r}
+## Recodage de BD_K$Age_classe
+BD_K$Age_classe_rec <- BD_K$Age_classe %>%
+  fct_recode(
+    "Moins de 500 jours" = "[1,500)",
+    "500 à 999 jours" = "[500,1000)",
+    "1000 à 1999 jours" = "[1000,2000)",
+    "plus de 2000 jours" = "[2000,5110]"
+  )
+```
+
+#Modèle de regression logistic expliquant l'anemie
+
+```{r}
+Mod1<-glm(Anemie~sexe+Résidence_rec+Age_classe_rec+Goutte_E+CRP+Motifs_C_rec,
+          family = binomial(),data = BD_K)
+
+```
+
+```{r}
+summary(Mod1)
+Mod2<- step(Mod1)
+```
+
+```{r}
+library(GGally)
+ggcoef_model(Mod2,exponentiate = T)
+```
+
+```{r}
+#|echo: False
+Mod2 %>% 
+  tbl_regression(exponentiate = T)
+```
